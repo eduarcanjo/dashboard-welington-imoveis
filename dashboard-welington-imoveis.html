@@ -802,55 +802,55 @@
       <div class="kpi-card">
         <div class="kpi-icon">💰</div>
         <div class="kpi-label">Valor Investido</div>
-        <div class="kpi-value highlight">R$ 36,20</div>
+        <div class="kpi-value highlight" data-kpi="valor_investido">R$ 36,20</div>
         <div class="kpi-period">Período atual</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-icon">🎯</div>
         <div class="kpi-label">Leads Captados</div>
-        <div class="kpi-value">4</div>
+        <div class="kpi-value" data-kpi="leads_captados">4</div>
         <div class="kpi-period">Total no período</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-icon">📊</div>
         <div class="kpi-label">Custo por Lead</div>
-        <div class="kpi-value highlight">R$ 9,05</div>
+        <div class="kpi-value highlight" data-kpi="custo_por_lead">R$ 9,05</div>
         <div class="kpi-period">Média atual</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-icon">👥</div>
         <div class="kpi-label">Seguidores Novos</div>
-        <div class="kpi-value">2</div>
+        <div class="kpi-value" data-kpi="seguidores_novos">2</div>
         <div class="kpi-period">No período</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-icon">📅</div>
         <div class="kpi-label">Visitas Agendadas</div>
-        <div class="kpi-value">0</div>
+        <div class="kpi-value" data-kpi="visitas_agendadas">0</div>
         <div class="kpi-period">No período</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-icon">🏠</div>
         <div class="kpi-label">Visitas Realizadas</div>
-        <div class="kpi-value">0</div>
+        <div class="kpi-value" data-kpi="visitas_realizadas">0</div>
         <div class="kpi-period">No período</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-icon">🔑</div>
         <div class="kpi-label">Imóveis Vendidos</div>
-        <div class="kpi-value">0</div>
+        <div class="kpi-value" data-kpi="imoveis_vendidos">0</div>
         <div class="kpi-period">No período</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-icon">📈</div>
         <div class="kpi-label">VGV</div>
-        <div class="kpi-value">R$ 0</div>
+        <div class="kpi-value" data-kpi="vgv">R$ 0</div>
         <div class="kpi-period">Valor Geral de Vendas</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-icon">💼</div>
         <div class="kpi-label">VGC</div>
-        <div class="kpi-value">R$ 0</div>
+        <div class="kpi-value" data-kpi="vgc">R$ 0</div>
         <div class="kpi-period">Valor Geral de Comissões</div>
       </div>
     </div>
@@ -877,8 +877,7 @@
     </div>
 
     <div class="plan-header">
-      <div style="font-size:13px;color:var(--text-muted);">Clique nos campos para editar. Marque o check quando concluir.</div>
-      <button class="btn btn-primary" onclick="addTask()">+ Nova Tarefa</button>
+      <div style="font-size:13px;color:var(--text-muted);">Tarefas gerenciadas pela Arcanjo Assessoria de Marketing.</div>
     </div>
 
     <table class="task-table" id="taskTable">
@@ -914,7 +913,7 @@
 
     <div class="phases-timeline">
 
-      <div class="phase-card concluida">
+      <div class="phase-card concluida" data-fase="1">
         <div class="phase-header">
           <div>
             <div class="phase-number">Fase 01</div>
@@ -927,7 +926,7 @@
         <div class="phase-prog-bar-bg"><div class="phase-prog-bar-fill fill-concluida"></div></div>
       </div>
 
-      <div class="phase-card andamento">
+      <div class="phase-card andamento" data-fase="2">
         <div class="phase-header">
           <div>
             <div class="phase-number">Fase 02</div>
@@ -940,7 +939,7 @@
         <div class="phase-prog-bar-bg"><div class="phase-prog-bar-fill fill-andamento"></div></div>
       </div>
 
-      <div class="phase-card standby">
+      <div class="phase-card standby" data-fase="3">
         <div class="phase-header">
           <div>
             <div class="phase-number">Fase 03</div>
@@ -953,7 +952,7 @@
         <div class="phase-prog-bar-bg"><div class="phase-prog-bar-fill fill-standby"></div></div>
       </div>
 
-      <div class="phase-card pendente">
+      <div class="phase-card pendente" data-fase="4">
         <div class="phase-header">
           <div>
             <div class="phase-number">Fase 04</div>
@@ -1019,12 +1018,29 @@ const now = new Date();
 document.getElementById('lastUpdated').textContent =
   'Atualizado em ' + now.toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
 
-// ─── OBSERVAÇÕES ─────────────────────────────────
-const obsEl = document.getElementById('dashObs');
-obsEl.value = localStorage.getItem('weilington_obs') || '';
-function saveObs() { localStorage.setItem('weilington_obs', obsEl.value); }
+// ─── GOOGLE SHEETS CONFIG ────────────────────────
+const SHEET_ID = '1EpFusu3o3vd4vNUrT1j91l-gZ5zak3Lkbr8eBrOWdFY';
+const API = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=`;
 
-// ─── TASK STATUS ─────────────────────────────────
+async function fetchSheet(sheetName) {
+  const res = await fetch(API + encodeURIComponent(sheetName));
+  const text = await res.text();
+  const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, ''));
+  return json.table.rows;
+}
+
+function cellVal(row, col) {
+  const c = row.c && row.c[col];
+  return c && c.v != null ? String(c.v) : '';
+}
+
+// ─── UTILS ───────────────────────────────────────
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+function isUrl(str) { return str && (str.startsWith('http://') || str.startsWith('https://')); }
+
 function parseDate(str) {
   if (!str) return null;
   const parts = str.split('/');
@@ -1033,7 +1049,7 @@ function parseDate(str) {
 }
 
 function getStatus(task) {
-  if (task.done) return 'ok';
+  if (task.done === 'true' || task.done === true) return 'ok';
   const d = parseDate(task.date);
   if (!d) return 'none';
   const today = new Date(); today.setHours(0,0,0,0);
@@ -1050,113 +1066,94 @@ function statusTitle(s) {
   return 'Em aberto';
 }
 
+// ─── KPIs ────────────────────────────────────────
+const kpiMap = {
+  valor_investido:   { el: null, label: 'Valor Investido' },
+  leads_captados:    { el: null, label: 'Leads Captados' },
+  custo_por_lead:    { el: null, label: 'Custo por Lead' },
+  seguidores_novos:  { el: null, label: 'Seguidores Novos' },
+  visitas_agendadas: { el: null, label: 'Visitas Agendadas' },
+  visitas_realizadas:{ el: null, label: 'Visitas Realizadas' },
+  imoveis_vendidos:  { el: null, label: 'Imóveis Vendidos' },
+  vgv:               { el: null, label: 'VGV' },
+  vgc:               { el: null, label: 'VGC' },
+};
+
+async function loadKpis() {
+  try {
+    const rows = await fetchSheet('kpis');
+    const data = {};
+    rows.forEach(r => { data[cellVal(r,0)] = cellVal(r,1); });
+
+    Object.keys(kpiMap).forEach(key => {
+      const els = document.querySelectorAll(`[data-kpi="${key}"]`);
+      els.forEach(el => { if (data[key] !== undefined) el.textContent = data[key]; });
+    });
+
+    const obsEl = document.getElementById('dashObs');
+    if (obsEl && data['observacoes'] !== undefined) obsEl.value = data['observacoes'];
+  } catch(e) { console.error('KPI load error', e); }
+}
+
 // ─── TASKS ───────────────────────────────────────
-const initialTasks = [
-  { done: false, name: 'Reativar Google Meu Negócio ou recriar', date: '03/07/2026', resp: 'Luis Eduardo', info: '' },
-  { done: false, name: 'Ajustes no site', date: '03/07/2026', resp: 'Weber', info: '' },
-  { done: false, name: 'Criar QR Code e arte gráfica para avaliações no Google', date: '03/07/2026', resp: 'Isaac', info: '' },
-  { done: false, name: 'Listar todos os produtos disponíveis e solicitar os criativos', date: '01/07/2026', resp: 'Isaac', info: '' },
-  { done: false, name: 'Elaborar roteiros para a gravação de quarta-feira', date: '29/06/2026', resp: 'Luis Eduardo', info: '' },
-  { done: false, name: 'Gravar criativos de topo de funil', date: '01/07/2026', resp: 'Welida', info: '' },
-  { done: false, name: 'Enviar relatório de atendimento: leads, visitas agendadas, visitas realizadas, vendas concluídas e motivos', date: '31/07/2026', resp: 'Welida Porto', info: '' },
-  { done: false, name: 'Criar campanhas de topo de funil', date: '', resp: 'Lucas', info: '' },
-  { done: false, name: 'Atualizar biografia do Instagram da imobiliária e da Welida', date: '29/06/2026', resp: 'Luis Eduardo', info: '' },
-  { done: false, name: 'Enviar modelos de criativos e sugestões de conteúdo para a Welida', date: '29/06/2026', resp: 'Luis Eduardo', info: '' },
-  { done: false, name: 'Criar calendário de posts', date: '29/06/2026', resp: 'Luis Eduardo', info: '' },
-];
+let tasks = [];
 
-let tasks = JSON.parse(localStorage.getItem('weilington_tasks') || 'null') || initialTasks;
-tasks = tasks.map(t => ({ info: '', ...t }));
-
-function saveTasks() { localStorage.setItem('weilington_tasks', JSON.stringify(tasks)); }
-
-function escHtml(str) {
-  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+async function loadTasks() {
+  try {
+    const rows = await fetchSheet('tarefas');
+    tasks = rows.slice(1).map(r => ({
+      done: cellVal(r,0),
+      name: cellVal(r,1),
+      date: cellVal(r,2),
+      resp: cellVal(r,3),
+      info: cellVal(r,4),
+    }));
+    renderTasks();
+  } catch(e) { console.error('Tasks load error', e); }
 }
 
 function renderTasks() {
   const body = document.getElementById('taskBody');
   body.innerHTML = '';
   tasks.forEach((t, i) => {
+    const isDone = t.done === 'true' || t.done === true;
     const st = getStatus(t);
     const tr = document.createElement('tr');
-    tr.className = 'task-row' + (t.done ? ' done' : '');
+    tr.className = 'task-row' + (isDone ? ' done' : '');
     tr.innerHTML = `
       <td class="check-cell">
-        <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onchange="toggleTask(${i})">
+        <input type="checkbox" class="task-check" ${isDone ? 'checked' : ''} disabled>
       </td>
       <td class="status-cell">
         <span class="status-dot ${st}" title="${statusTitle(st)}"></span>
       </td>
-      <td>
-        <input class="task-input task-name-input" value="${escHtml(t.name)}" placeholder="Descreva a tarefa..."
-          onchange="updateTask(${i},'name',this.value)">
-      </td>
-      <td>
-        <input class="task-input date-input" value="${escHtml(t.date)}" placeholder="dd/mm/aaaa"
-          onchange="updateTask(${i},'date',this.value)">
-      </td>
-      <td>
-        <input class="task-input" value="${escHtml(t.resp)}" placeholder="Responsável"
-          onchange="updateTask(${i},'resp',this.value)">
-      </td>
-      <td class="actions-cell">
-        <div class="task-actions">
-          <button class="icon-btn" title="Duplicar" onclick="duplicateTask(${i})">⧉</button>
-          <button class="icon-btn delete" title="Excluir" onclick="deleteTask(${i})">✕</button>
-        </div>
-      </td>
+      <td><div class="task-input task-name-input" style="padding:14px 16px;font-size:13px;">${escHtml(t.name)}</div></td>
+      <td><div class="task-input date-input" style="padding:14px 16px;font-size:12px;color:var(--text-muted);">${escHtml(t.date)}</div></td>
+      <td><div class="task-input" style="padding:14px 16px;font-size:13px;">${escHtml(t.resp)}</div></td>
+      <td class="actions-cell"></td>
     `;
     body.appendChild(tr);
 
-    const infoTr = document.createElement('tr');
-    infoTr.className = 'task-info-row';
-    infoTr.innerHTML = `
-      <td colspan="6">
-        <div class="task-info-wrap">
-          <span class="task-info-label">Informações:</span>
-          <textarea class="task-info-input" placeholder="Adicione detalhes, links ou anotações sobre esta tarefa..."
-            onchange="updateTask(${i},'info',this.value)">${escHtml(t.info)}</textarea>
-        </div>
-      </td>
-    `;
-    body.appendChild(infoTr);
+    if (t.info) {
+      const infoTr = document.createElement('tr');
+      infoTr.className = 'task-info-row';
+      infoTr.innerHTML = `
+        <td colspan="6">
+          <div class="task-info-wrap">
+            <span class="task-info-label">Informações:</span>
+            <div style="font-size:12px;color:#b0b8b0;padding:6px 0;line-height:1.6;">${escHtml(t.info)}</div>
+          </div>
+        </td>
+      `;
+      body.appendChild(infoTr);
+    }
   });
   updateProgress();
 }
 
-function toggleTask(i) {
-  tasks[i].done = !tasks[i].done;
-  saveTasks(); renderTasks();
-}
-
-function updateTask(i, field, val) {
-  tasks[i][field] = val;
-  saveTasks();
-  if (field === 'date') renderTasks();
-}
-
-function duplicateTask(i) {
-  tasks.splice(i + 1, 0, { ...tasks[i], done: false });
-  saveTasks(); renderTasks();
-}
-
-function deleteTask(i) {
-  if (tasks.length === 1) return;
-  tasks.splice(i, 1);
-  saveTasks(); renderTasks();
-}
-
-function addTask() {
-  tasks.push({ done: false, name: '', date: '', resp: '', info: '' });
-  saveTasks(); renderTasks();
-  const inputs = document.querySelectorAll('.task-name-input');
-  inputs[inputs.length - 1].focus();
-}
-
 function updateProgress() {
   const total = tasks.length;
-  const done = tasks.filter(t => t.done).length;
+  const done = tasks.filter(t => t.done === 'true' || t.done === true).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
   document.getElementById('planPct').textContent = pct + '%';
   document.getElementById('planBar').style.width = pct + '%';
@@ -1179,47 +1176,73 @@ const infoFields = [
   { key: 'google_drive',          label: 'Google Drive',             icon: '📁' },
 ];
 
-let infoData = JSON.parse(localStorage.getItem('weilington_infos') || '{}');
-function saveInfos() { localStorage.setItem('weilington_infos', JSON.stringify(infoData)); }
+async function loadInfos() {
+  try {
+    const rows = await fetchSheet('informacoes');
+    const data = {};
+    rows.forEach(r => { data[cellVal(r,0)] = cellVal(r,1); });
 
-function isUrl(str) { return str && (str.startsWith('http://') || str.startsWith('https://')); }
-
-function renderInfos() {
-  const grid = document.getElementById('infoGrid');
-  grid.innerHTML = '';
-  infoFields.forEach(f => {
-    const val = infoData[f.key] || '';
-    const card = document.createElement('div');
-    card.className = 'info-card';
-    const showLink = isUrl(val);
-    card.innerHTML = `
-      <div class="info-card-header">
-        <span class="info-card-icon">${f.icon}</span>
-        <span class="info-card-label">${f.label}</span>
-      </div>
-      <input class="info-card-input" type="text" value="${escHtml(val)}"
-        placeholder="Cole o link ou texto..."
-        oninput="updateInfo('${f.key}', this.value, this)">
-      <a class="info-card-open" id="link_${f.key}" href="${escHtml(val)}" target="_blank" rel="noopener"
-        style="${showLink ? '' : 'display:none'}">↗ Abrir</a>
-    `;
-    grid.appendChild(card);
-  });
+    const grid = document.getElementById('infoGrid');
+    grid.innerHTML = '';
+    infoFields.forEach(f => {
+      const val = data[f.key] || '';
+      const card = document.createElement('div');
+      card.className = 'info-card';
+      card.innerHTML = `
+        <div class="info-card-header">
+          <span class="info-card-icon">${f.icon}</span>
+          <span class="info-card-label">${f.label}</span>
+        </div>
+        ${val
+          ? `<a href="${escHtml(val)}" target="_blank" rel="noopener"
+               style="display:block;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--dourado);font-size:13px;text-decoration:none;word-break:break-all;">
+               ↗ ${isUrl(val) ? 'Abrir link' : escHtml(val)}
+             </a>`
+          : `<div style="padding:10px 12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-size:12px;">Não informado</div>`
+        }
+      `;
+      grid.appendChild(card);
+    });
+  } catch(e) { console.error('Infos load error', e); }
 }
 
-function updateInfo(key, val, input) {
-  infoData[key] = val;
-  saveInfos();
-  const a = document.getElementById('link_' + key);
-  if (a) {
-    if (isUrl(val)) { a.href = val; a.style.display = 'inline-flex'; }
-    else { a.style.display = 'none'; }
-  }
+// ─── FASES ───────────────────────────────────────
+async function loadFases() {
+  try {
+    const rows = await fetchSheet('fases');
+    const data = {};
+    rows.forEach(r => { data[cellVal(r,0)] = cellVal(r,1); });
+
+    const map = { concluida: 'concluida', andamento: 'andamento', standby: 'standby', pendente: 'pendente' };
+    const badgeMap = { concluida: 'Concluída', andamento: 'Em Andamento', standby: 'Aguardando', pendente: 'Pendente' };
+    const badgeClass = { concluida: 'badge-concluida', andamento: 'badge-andamento', standby: 'badge-standby', pendente: 'badge-pendente' };
+    const fillClass = { concluida: 'fill-concluida', andamento: 'fill-andamento', standby: 'fill-standby', pendente: 'fill-pendente' };
+
+    for (let i = 1; i <= 4; i++) {
+      const status = data[`status_fase${i}`] || 'pendente';
+      const card = document.querySelector(`.phase-card[data-fase="${i}"]`);
+      if (!card) continue;
+      card.className = `phase-card ${status}`;
+      const badge = card.querySelector('.phase-badge');
+      if (badge) { badge.className = `phase-badge ${badgeClass[status]}`; badge.textContent = badgeMap[status]; }
+      const fill = card.querySelector('.phase-prog-bar-fill');
+      if (fill) fill.className = `phase-prog-bar-fill ${fillClass[status]}`;
+    }
+
+    const done = Object.values(data).filter(v => v === 'concluida').length;
+    const pct = Math.round((done / 4) * 100);
+    document.querySelector('.phases-progress .progress-pct').textContent = pct + '%';
+    document.querySelector('.phases-progress .progress-bar-fill').style.width = pct + '%';
+    document.querySelector('.phases-progress .progress-counts').textContent =
+      done + ' de 4 fase' + (done !== 1 ? 's' : '') + ' concluída' + (done !== 1 ? 's' : '');
+  } catch(e) { console.error('Fases load error', e); }
 }
 
-// INIT
-renderTasks();
-renderInfos();
+// ─── INIT ────────────────────────────────────────
+loadKpis();
+loadTasks();
+loadInfos();
+loadFases();
 </script>
 </body>
 </html>
