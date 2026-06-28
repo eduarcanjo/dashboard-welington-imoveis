@@ -1032,16 +1032,16 @@ async function fetchSheet(sheetName) {
 function cellVal(row, col) {
   const c = row.c && row.c[col];
   if (!c || c.v == null) return '';
+  // Handle boolean (from checkbox or dropdown)
+  if (typeof c.v === 'boolean') return c.v ? 'true' : 'false';
   // Handle Date objects returned as Date(yyyy,m,d)
   if (typeof c.v === 'string' && c.v.startsWith('Date(')) {
     const parts = c.v.replace('Date(','').replace(')','').split(',');
     const y = parts[0], m = String(parseInt(parts[1])+1).padStart(2,'0'), d = String(parts[2]).padStart(2,'0');
     return d + '/' + m + '/' + y;
   }
-  // Handle boolean (from checkbox)
-  if (typeof c.v === 'boolean') return c.v ? 'true' : 'false';
-  // Handle formatted date value
-  if (c.f && c.f.match(/\d{2}\/\d{2}\/\d{4}/)) return c.f;
+  // Use formatted value if available (preserves R$, %, etc.)
+  if (c.f) return c.f;
   return String(c.v);
 }
 
