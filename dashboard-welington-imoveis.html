@@ -1112,13 +1112,15 @@ let tasks = [];
 async function loadTasks() {
   try {
     const rows = await fetchSheet('tarefas');
-    tasks = rows.slice(1).map(r => ({
+    // Detecta se a primeira linha é cabeçalho verificando se coluna A contém 'done'
+    const startIdx = (rows.length > 0 && cellVal(rows[0], 0).toLowerCase() === 'done') ? 1 : 0;
+    tasks = rows.slice(startIdx).map(r => ({
       done: cellVal(r,0),
       name: cellVal(r,1),
       date: cellVal(r,2),
       resp: cellVal(r,3),
       info: cellVal(r,4),
-    }));
+    })).filter(t => t.name.trim() !== '');
     renderTasks();
   } catch(e) { console.error('Tasks load error', e); }
 }
