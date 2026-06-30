@@ -785,9 +785,9 @@
 <!-- NAV TABS -->
 <nav class="nav-tabs">
   <button class="nav-tab active" onclick="showSection('dashboard', this)">Dashboard</button>
-  <button class="nav-tab" onclick="showSection('plano', this)">Plano de Ação</button>
-  <button class="nav-tab" onclick="showSection('fases', this)">Fases de Evolução</button>
-  <button class="nav-tab" onclick="showSection('infos', this)">Informações e Dados</button>
+  <button class="nav-tab" onclick="showSection('plano', this)">Checklist</button>
+  <button class="nav-tab" onclick="showSection('fases', this)">Timeline</button>
+  <button class="nav-tab" onclick="showSection('infos', this)">Links</button>
 </nav>
 
 <!-- MAIN -->
@@ -858,7 +858,7 @@
     <!-- OBSERVAÇÕES GERAIS -->
     <div class="obs-wrap">
       <div class="obs-title">Observações Gerais</div>
-      <textarea class="obs-textarea" id="dashObs" placeholder="Clique aqui para adicionar observações sobre o período..." oninput="saveObs()"></textarea>
+      <textarea class="obs-textarea" id="dashObs" placeholder="Nenhuma observação no momento." readonly></textarea>
     </div>
   </section>
   <section id="plano" class="section">
@@ -1090,6 +1090,17 @@ const kpiMap = {
   vgc:               { el: null, label: 'VGC' },
 };
 
+const kpiCurrency = ['valor_investido','custo_por_lead','vgv','vgc'];
+
+function formatKpi(key, val) {
+  if (!val && val !== 0) return '';
+  const num = parseFloat(String(val).replace(',','.'));
+  if (kpiCurrency.includes(key) && !isNaN(num)) {
+    return 'R$ ' + num.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+  return String(val);
+}
+
 async function loadKpis() {
   try {
     const rows = await fetchSheet('kpis');
@@ -1098,7 +1109,7 @@ async function loadKpis() {
 
     Object.keys(kpiMap).forEach(key => {
       const els = document.querySelectorAll(`[data-kpi="${key}"]`);
-      els.forEach(el => { if (data[key] !== undefined) el.textContent = data[key]; });
+      els.forEach(el => { if (data[key] !== undefined) el.textContent = formatKpi(key, data[key]); });
     });
 
     const obsEl = document.getElementById('dashObs');
@@ -1187,6 +1198,8 @@ const infoFields = [
   { key: 'google_meu_negocio',    label: 'Google Meu Negócio',       icon: '📍' },
   { key: 'crm',                   label: 'CRM',                      icon: '🗂️' },
   { key: 'google_drive',          label: 'Google Drive',             icon: '📁' },
+  { key: 'briefing',              label: 'Briefing',                 icon: '📝' },
+  { key: 'planilha_geral',        label: 'Planilha Geral',           icon: '📊' },
 ];
 
 async function loadInfos() {
